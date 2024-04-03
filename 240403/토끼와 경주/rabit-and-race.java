@@ -68,11 +68,6 @@ public class Main {
 			rabbit.jmpCnt += 1;
 			rabbit.isMove = true;
 
-			// int[] upMove = move(rabbit, 0);
-			// int[] rightMove = move(rabbit, 1);
-			// int[] downMove = move(rabbit, 2);
-			// int[] leftMove = move(rabbit, 3);
-
 			int[] nextPoint = comparePoint(comparePoint(move(rabbit, 0), move(rabbit, 1)),
 				comparePoint(move(rabbit, 2), move(rabbit, 3)));
 
@@ -120,21 +115,47 @@ public class Main {
 		} else {
 			distance = distance % (M * 2 - 2);
 		}
-
 		int r = rabbit.r;
 		int c = rabbit.c;
 
-		for (int i = 0; i < distance; i++) {
-			int nr = r + dr[d];
-			int nc = c + dc[d];
-
-			if (!isValidPoint(nr, nc)) {
-				d = (d + 2) % 4;
-				nr = r + dr[d];
-				nc = c + dc[d];
+		while (distance > 0) {
+			if (d == 0) {
+				if (r >= distance) {
+					r -= distance;
+					distance = 0;
+				} else {
+					r = 0;
+					distance -= r;
+					d = 2;
+				}
+			} else if (d == 2) {
+				if (N - r - 1 >= distance) {
+					r += distance;
+					distance = 0;
+				} else {
+					distance -= N - r - 1;
+					r = N - 1;
+					d = 0;
+				}
+			} else if (d == 1) {
+				if (M - c - 1 >= distance) {
+					c += distance;
+					distance = 0;
+				} else {
+					distance -= M - c - 1;
+					c = M - 1;
+					d = 3;
+				}
+			} else if (d == 3) {
+				if (c >= distance) {
+					c -= distance;
+					distance = 0;
+				} else {
+					distance -= c;
+					c = 0;
+					d = 1;
+				}
 			}
-			r = nr;
-			c = nc;
 		}
 
 		return new int[] {r, c};
@@ -145,7 +166,7 @@ public class Main {
 		int l = commands[2];
 
 		Rabbit rabbit = rabbits[id];
-		rabbit.dis = rabbit.dis * l;
+		rabbit.dis *= l;
 	}
 
 	private static void printScore() {
