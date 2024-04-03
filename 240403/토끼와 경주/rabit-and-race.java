@@ -21,7 +21,7 @@ public class Main {
 	public static void main(String args[]) throws IOException {
 		br = new BufferedReader(new InputStreamReader(System.in));
 		queue = new PriorityQueue<Rabbit>();
-		rabbits = new Rabbit[2001];
+		rabbits = new Rabbit[10000001];
 		Q = Integer.parseInt(br.readLine());
 		for (int i = 0; i < Q; i++) {
 			getCommand(Arrays.stream(br.readLine().split(" ")).mapToInt(Integer::parseInt).toArray());
