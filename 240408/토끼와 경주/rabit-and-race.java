@@ -165,7 +165,7 @@ public class Main {
 	}
 	
 	private static void printMaxScore() {
-		int max = Integer.MIN_VALUE;
+		long max = Long.MIN_VALUE;
 		for(Rabbit rabbit : rabbitQueue) {
 			max = Math.max(rabbit.score, max);
 		}
@@ -192,7 +192,8 @@ public class Main {
 	}
 	static class Rabbit implements Comparable<Rabbit>{
 		
-		int id, dist, count, score, r, c;
+		int id, dist, count, r, c;
+		long score;
 		boolean isJump;
 		public Rabbit(int id, int dist) {
 			this.id = id;
