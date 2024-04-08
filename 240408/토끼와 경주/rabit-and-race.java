@@ -1,216 +1,228 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.PriorityQueue;
-import java.util.StringTokenizer;
+import java.util.Queue;
 
 public class Main {
 
-	static int N, M, Q;
-	static BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-	static PriorityQueue<Rabbit> rabbitQueue = new PriorityQueue<Rabbit>();
-	static int dr[] = new int[] {-1, 0, 1, 0};
-	static int dc[] = new int[] {0, 1, 0, -1};
-	static Rabbit[] rabbits = new Rabbit[10000001];
-	public static void main(String[] args) throws IOException{
-		
+	static int Q;
+	static int N;
+	static int M;
+
+	static BufferedReader br;
+	static Queue<Rabbit> queue;
+	static Rabbit[] rabbits;
+	static int[] dr = new int[] {-1, 0, 1, 0};
+	static int[] dc = new int[] {0, 1, 0, -1};
+
+	public static void main(String args[]) throws IOException {
+		br = new BufferedReader(new InputStreamReader(System.in));
+		queue = new PriorityQueue<Rabbit>();
+		rabbits = new Rabbit[10000001];
 		Q = Integer.parseInt(br.readLine());
-		
-		while(Q--> 0) {
-			StringTokenizer st = new StringTokenizer(br.readLine(), " ");
-			
-			doSomething(st);
+		for (int i = 0; i < Q; i++) {
+			getCommand(Arrays.stream(br.readLine().split(" ")).mapToInt(Integer::parseInt).toArray());
 		}
 	}
-	
-	static void doSomething(StringTokenizer st) {
-		int order = Integer.parseInt(st.nextToken());
-		
-		switch(order) {
+
+	private static void getCommand(int[] commands) {
+		switch (commands[0]) {
 			case 100:
-				init(st);
+				init(commands);
 				break;
 			case 200:
-				race(st);
+				move(commands);
 				break;
 			case 300:
-				modify(st);
+				upgradeRabbit(commands);
 				break;
 			case 400:
-				printMaxScore();
+				printScore();
 				break;
 		}
 	}
-	
-	static void init(StringTokenizer st) {
-		N = Integer.parseInt(st.nextToken());
-		M = Integer.parseInt(st.nextToken());
-		int P = Integer.parseInt(st.nextToken());
-		
-		while(P-->0) {
-			int id = Integer.parseInt(st.nextToken());
-			int dist = Integer.parseInt(st.nextToken());
-			Rabbit rabbit = new Rabbit(id, dist);
+
+	private static void init(int[] commands) {
+		N = commands[1];
+		M = commands[2];
+		int cnt = commands[3];
+
+		for (int i = 4; i < 4 + cnt * 2; i += 2) {
+			int id = commands[i];
+			int dis = commands[i + 1];
+			Rabbit rabbit = new Rabbit(id, dis);
+			queue.add(rabbit);
 			rabbits[id] = rabbit;
-			rabbitQueue.add(rabbit);
-			
 		}
 	}
-	
-	static void race(StringTokenizer st) {
-		int K = Integer.parseInt(st.nextToken());
-		int S = Integer.parseInt(st.nextToken());
-		
-		while(K--> 0) {
-			Rabbit rabbit = rabbitQueue.poll();
-			rabbit.isJump = true;
-			rabbit.count += 1;
-			move(rabbit);
-			int plus = rabbit.r + rabbit.c + 2;
-			for(Rabbit temp : rabbitQueue) {
-				temp.score += plus;
-			}
-			rabbitQueue.add(rabbit);
-		}
-		
-		PriorityQueue<Rabbit> tempQueue = new PriorityQueue<Rabbit>(new Comparator<Rabbit>(){
 
+	private static void move(int[] commands) {
+		int K = commands[1];
+		int S = commands[2];
+
+		for (int i = 0; i < K; i++) {
+			Rabbit rabbit = queue.poll();
+			rabbit.jmpCnt += 1;
+			rabbit.isMove = true;
+
+			int[] nextPoint = comparePoint(comparePoint(move(rabbit, 0), move(rabbit, 1)),
+				comparePoint(move(rabbit, 2), move(rabbit, 3)));
+
+			rabbit.r = nextPoint[0];
+			rabbit.c = nextPoint[1];
+
+			int point = nextPoint[0] + nextPoint[1] + 2;
+
+			for (Rabbit temp : queue) {
+				temp.score = temp.score + point;
+			}
+
+			queue.add(rabbit);
+		}
+
+		PriorityQueue<Rabbit> tempQueue = new PriorityQueue<Rabbit>(new Comparator<Rabbit>() {
 			@Override
 			public int compare(Rabbit o1, Rabbit o2) {
-				if(o1.r + o1.c != o2.r + o2.c) return o2.r + o2.c - o1.r - o1.c;
-				if(o1.r != o2.r) return o2.r - o1.r;
-				if(o1.c != o2.c) return o2.c - o1.c;
+				if (o1.r + o1.c != o2.r + o2.c)
+					return (o2.r + o2.c) - (o1.r + o1.c);
+				if (o1.r != o2.r)
+					return o2.r - o1.r;
+				if (o1.c != o2.c)
+					return o2.c - o1.c;
 				return o2.id - o1.id;
 			}
-			
 		});
-		
-		for(Rabbit temp: rabbitQueue) {
-			if(temp.isJump) {
+		for (Rabbit temp : queue) {
+			if (temp.isMove) {
 				tempQueue.add(temp);
-				temp.isJump = false;
 			}
 		}
-		
-		Rabbit temp = tempQueue.peek();
-		temp.score += S;
-	}
-	
-	static void move(Rabbit rabbit) {
-		PriorityQueue<RabbitPoint> pointQueue = new PriorityQueue<RabbitPoint>();
-		
-		pointQueue.add(move(rabbit, 0));
-		pointQueue.add(move(rabbit, 1));
-		pointQueue.add(move(rabbit, 2));
-		pointQueue.add(move(rabbit, 3));
-		
-		RabbitPoint next = pointQueue.peek();
-		rabbit.r = next.r;
-		rabbit.c = next.c;
-	}
-	
-	static RabbitPoint move(Rabbit rabbit, int d) {
-		int r = rabbit.r;
-		int c = rabbit.c;
-		int dist = rabbit.dist;
-		if(d == 0 || d == 2) {
-			dist %= N*2 - 2;
+		Rabbit rabbit = tempQueue.peek();
+		rabbit.score += S;
+
+		for (Rabbit temp : queue) {
+			temp.isMove = false;
 		}
-		else {
-			dist %= M*2 -2;
-		}
-		
-		while(dist != 0) {
-			int limit = getLimit(d, r, c);
-			
-			if(limit >= dist) {
-				r += dr[d] * dist;
-				c += dc[d] * dist;
-				dist = 0;
-			}
-			else {
-				r += dr[d] * limit;
-				c += dc[d] * limit;
-				d = (d+2) % 4;
-				dist -= limit;
-			}
-		}
-		
-		return new RabbitPoint(r, c);
-	}
-	
-	private static int getLimit(int d, int r, int c) {
-		int limit;
-		
-		if(d == 0) {
-			limit = r;
-		}
-		else if(d == 1) {
-			limit = M - c-1;
-		}
-		else if(d == 2) {
-			limit = N - r - 1;
-		}
-		else {
-			limit = c;
-		}
-		return limit;
-	}
-	
-	private static void modify(StringTokenizer st) {
-		int id = Integer.parseInt(st.nextToken());
-		int L = Integer.parseInt(st.nextToken());
-		rabbits[id].dist *= L;
-	}
-	
-	private static void printMaxScore() {
-		long max = Long.MIN_VALUE;
-		for(Rabbit rabbit : rabbitQueue) {
-			max = Math.max(rabbit.score, max);
-		}
-		
-		System.out.println(max);
-	}
-	
-	static boolean isValidPoint(int r, int c) {
-		return 0 <= r && 0 <= c && r < N && c < M;
 	}
 
-	static class RabbitPoint implements Comparable<RabbitPoint>{
-		int r, c;
-		public RabbitPoint(int r, int c) {
-			this.r = r;
-			this.c = c;
+	private static int[] move(Rabbit rabbit, int d) {
+		int distance = rabbit.dis;
+		if (d == 0 || d == 2) {
+			distance = distance % (N * 2 - 2);
+		} else {
+			distance = distance % (M * 2 - 2);
 		}
-		
-		public int compareTo(RabbitPoint point) {
-			if(this.r + this.c != point.r + point.c) return point.r + point.c - this.r - this.c;
-			if(this.r != point.r) return point.r - this.r;
-			return point.c - this.r;
+		int r = rabbit.r;
+		int c = rabbit.c;
+
+		while (distance > 0) {
+			if (d == 0) {
+				if (r >= distance) {
+					r -= distance;
+					distance = 0;
+				} else {
+					r = 0;
+					distance -= r;
+					d = 2;
+				}
+			} else if (d == 2) {
+				if (N - r - 1 >= distance) {
+					r += distance;
+					distance = 0;
+				} else {
+					distance -= N - r - 1;
+					r = N - 1;
+					d = 0;
+				}
+			} else if (d == 1) {
+				if (M - c - 1 >= distance) {
+					c += distance;
+					distance = 0;
+				} else {
+					distance -= M - c - 1;
+					c = M - 1;
+					d = 3;
+				}
+			} else if (d == 3) {
+				if (c >= distance) {
+					c -= distance;
+					distance = 0;
+				} else {
+					distance -= c;
+					c = 0;
+					d = 1;
+				}
+			}
 		}
+
+		return new int[] {r, c};
 	}
-	static class Rabbit implements Comparable<Rabbit>{
-		
-		int id, dist, count, r, c;
-		long score;
-		boolean isJump;
-		public Rabbit(int id, int dist) {
-			this.id = id;
-			this.dist = dist;
-			this.count = 0;
-			this.score = 0;
-			this.r = 0;
-			this.c = 0;
-			this.isJump = false;
+
+	private static void upgradeRabbit(int[] commands) {
+		int id = commands[1];
+		int l = commands[2];
+
+		Rabbit rabbit = rabbits[id];
+		rabbit.dis *= l;
+	}
+
+	private static void printScore() {
+		long max = Long.MIN_VALUE;
+		for (Rabbit rabbit : queue) {
+			max = Math.max(max, rabbit.getScore());
 		}
-		@Override
-		public int compareTo(Rabbit rabbit) {
-			if(this.count != rabbit.count) return this.count - rabbit.count;
-			if(this.r + this.c != rabbit.r + rabbit.c) return this.r + this.c - rabbit.r - rabbit.c;
-			if(this.r != rabbit.r) return this.r - rabbit.r;
-			if(this.c != rabbit.c) return this.c - rabbit.c;
-			return this.id - rabbit.id;
-		}
+		System.out.println(max);
+	}
+
+	private static boolean isValidPoint(int nr, int nc) {
+		return 0 <= nr && 0 <= nc && nr < N && nc < M;
+	}
+
+	private static int[] comparePoint(int[] point1, int[] point2) {
+		if ((point1[0] + point1[1]) != (point2[0] + point2[1]))
+			return (point1[0] + point1[1]) > (point2[0] + point2[1]) ? point1 : point2;
+		if (point1[0] != point2[0])
+			return point1[0] > point2[0] ? point1 : point2;
+		return point1[1] > point2[1] ? point1 : point2;
+	}
+}
+
+class Rabbit implements Comparable<Rabbit> {
+	int id;
+	int jmpCnt;
+	int r;
+	int c;
+	int dis;
+	long score;
+	boolean isMove;
+
+	public Rabbit(int id, int dis) {
+		this.id = id;
+		this.jmpCnt = 0;
+		this.r = 0;
+		this.c = 0;
+		this.dis = dis;
+		this.score = 0;
+		this.isMove = false;
+	}
+
+	public long getScore() {
+		return this.score;
+	}
+
+	@Override
+	public int compareTo(Rabbit rabbit) {
+		if (this.jmpCnt != rabbit.jmpCnt)
+			return this.jmpCnt - rabbit.jmpCnt;
+		if (this.r + this.c != rabbit.r + rabbit.c)
+			return (this.r + this.c) - (rabbit.r + rabbit.c);
+		if (this.r != rabbit.r)
+			return this.r - rabbit.r;
+		if (this.c != rabbit.c)
+			return this.c - rabbit.c;
+		return this.id - rabbit.id;
 	}
 }
