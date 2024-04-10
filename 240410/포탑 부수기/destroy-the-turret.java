@@ -1,6 +1,13 @@
-import java.io.*;
-import java.util.*;
-import java.lang.Comparable;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedList;
+import java.util.Objects;
+import java.util.PriorityQueue;
+import java.util.Queue;
+import java.util.StringTokenizer;
 
 public class Main {
 
@@ -38,14 +45,12 @@ public class Main {
 		while(K --> 0) {
 			// 1. 공격자 선정
 			Tower attacker = getTower(weak);
-			attacker.time = time;
-			attacker.power += N+M;
 			
 			// 2. 타겟 선정
 			Tower target = getTower(strong);
 			
-			// 포탑이 하나만 남음
-			if(attacker == target) break;
+			attacker.time = time;
+			attacker.power += N+M;
 			
 			// 3. 레이저 가능 확인
 			Point[][] history = getAttackWay(attacker, target);
@@ -69,6 +74,8 @@ public class Main {
 			// 5. 포탑 정비
 			repair();
 			time += 1;
+			
+			if(isOver()) break;
 		}
 		
 		long result = Long.MIN_VALUE;
@@ -85,6 +92,16 @@ public class Main {
 		System.out.println(result);
 	}
 	
+	private static boolean isOver() {
+		int cnt = 0;
+		for(int i=0; i<N; i++) {
+			for(int j=0; j<M; j++) {
+				if(towerMap[i][j] != null) cnt += 1;
+			}
+		}
+		return cnt <= 1;
+	}
+
 	private static void repair() {
 		for(int i=0; i<N; i++) {
 			for(int j=0; j<M; j++) {
@@ -119,7 +136,7 @@ public class Main {
 		int c = target.c;
 		for(int i=0; i<8; i++) {
 			int nr = r + dr[i];
-			int nc = c + dr[i];
+			int nc = c + dc[i];
 			
 			if(nr == N) nr = 0;
 			if(nr == -1) nr = N-1;
