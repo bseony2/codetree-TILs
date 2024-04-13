@@ -89,22 +89,25 @@ public class Main {
 		Node parent1 = nodes[target1.parent];
 		Node parent2 = nodes[target2.parent];
 		
-		if(parent1.childrens[0] == target1) {
-			parent1.childrens[0] = target2;
-		}
-		else {
-			parent1.childrens[1] = target2;
-		}
-		
-		if(parent2.childrens[0] == target2) {
-			parent2.childrens[0] = target1;
-		}
-		else {
-			parent2.childrens[1] = target1;
+		if(parent1 != null) {
+			if(parent1.childrens[0] == target1) {
+				parent1.childrens[0] = target2;
+			}
+			else {
+				parent1.childrens[1] = target2;
+			}
 		}
 		
-		target1.parent = parent2.id;
-		target2.parent = parent1.id;
+		if(parent2 != null) {
+			if(parent2.childrens[0] == target2) {
+				parent2.childrens[0] = target1;
+			}
+			else {
+				parent2.childrens[1] = target1;
+			}
+		}
+		target1.parent = parent2 == null ? 0 : parent2.id;
+		target2.parent = parent1 == null ? 0 : parent1.id;
 		
 	}
 	private static void changeAuthority() {
