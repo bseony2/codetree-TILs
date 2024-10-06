@@ -90,34 +90,32 @@ public class Main {
 		return pq.poll();
 	}
 	
-	static int[][] getNewMap(int r, int c, int d) {
-		int[][] newMap = new int[MAP_SIZE][MAP_SIZE];
-		
+	static int[][] copyMap(int[][] target) {
+		int[][] newMap = new int[target.length][target[0].length];
 		for(int i=0; i<MAP_SIZE; i++) {
-			System.arraycopy(map[i], 0, newMap[i], 0, MAP_SIZE);
+			System.arraycopy(target[i], 0, newMap[i], 0, MAP_SIZE);
+		}
+		return newMap;
+	}
+	
+	static int[][] getNewMap(int r, int c, int d) {
+		int[][] newMap = copyMap(map);
+		
+		for(int x=0; x<d; x++) {
+			turn(newMap, r, c);
 		}
 		
-		if(d == 1) {
-			for(int i=0; i<3; i++) {
-				for(int j=0; j<3; j++) {
-					newMap[r-1+i][c-1+j] = map[r+1-j][c-1+i];
-				}
-			}
-		} else if(d == 2) {
-			for(int i=0; i<3; i++) {
-				for(int j=0; j<3; j++) {
-					newMap[r-1+i][c-1+j] = map[r+1-i][c+1-j];
-				}
-			}
-		} else if(d == 3) {
-			for(int i=0; i<3; i++) {
-				for(int j=0; j<3; j++) {
-					newMap[r-1+i][c-1+j] = map[r-1+j][c+1-i];
-				}
-			}
-		} 
-		
 		return newMap;
+	}
+	
+	static void turn(int[][] target, int r, int c) {
+		int[][] temp = copyMap(target);
+		
+		for(int i=0; i<3; i++) {
+			for(int j=0; j<3; j++) {
+				target[r-1+i][c-1+j] = temp[r+1-j][c-1+i];
+			}
+		}
 	}
 	
 	static int calScore(int[][] target) {
