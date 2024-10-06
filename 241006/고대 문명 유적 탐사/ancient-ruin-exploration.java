@@ -28,11 +28,10 @@ public class Main {
 		for(int k=0; k<K; k++) {
 			int result = exe();
 			
-			if(result == -1) {
+			if(result == 0) {
 				break;
 			}
-			
-            bw.write(result + " ");
+			bw.write(result + " ");
 		}
 		
 		bw.flush();
@@ -42,26 +41,24 @@ public class Main {
 		int result = 0;
 		
 		Matrix nextMap = doFind(); // 첫 탐사
-		if(nextMap.score == 0) { // 첫 탐사를 해도 유물을 획득할수 없다면 종료
-			return -1;
-		}
 		
-		result += nextMap.score;
-		map = nextMap.ownMap; // 정적 변수 map 변경
+		// 새로운 맵으로 변경
+		map = getNewMap(nextMap.r, nextMap.c, nextMap.d);
 		
 		while(true) {
-			// 탐사를 마친 후이니 유물조각을 채우기
-			fill();
-			
-			// 재탐사 시작
+			// 탐사 시작
 			int score = calScore(map);
 			
 			result += score;
+						
+			// 탐사를 마친 후이니 유물조각을 채우기
+			fill();
 			
 			// 유물 획득이 불가능하면 턴 종료
 			if(score == 0) {
 				break;
 			}
+			
 		}
 		
 		return result;
@@ -85,12 +82,42 @@ public class Main {
 		for(int i=1; i<4; i++) {
 			for(int j=1; j<4; j++) {
 				pq.offer(new Matrix(i, j, 1));
-				pq.offer(new Matrix(i, j, -1));
 				pq.offer(new Matrix(i, j, 2));
+				pq.offer(new Matrix(i, j, 3));
 			}
 		}
 		
 		return pq.poll();
+	}
+	
+	static int[][] getNewMap(int r, int c, int d) {
+		int[][] newMap = new int[MAP_SIZE][MAP_SIZE];
+		
+		for(int i=0; i<MAP_SIZE; i++) {
+			System.arraycopy(map[i], 0, newMap[i], 0, MAP_SIZE);
+		}
+		
+		if(d == 1) {
+			for(int i=0; i<3; i++) {
+				for(int j=0; j<3; j++) {
+					newMap[r-1+i][c-1+j] = map[r+1-j][c-1+i];
+				}
+			}
+		} else if(d == 2) {
+			for(int i=0; i<3; i++) {
+				for(int j=0; j<3; j++) {
+					newMap[r-1+i][c-1+j] = map[r+1-i][c+1-j];
+				}
+			}
+		} else if(d == 3) {
+			for(int i=0; i<3; i++) {
+				for(int j=0; j<3; j++) {
+					newMap[r-1+i][c-1+j] = map[r-1+j][c+1-i];
+				}
+			}
+		} 
+		
+		return newMap;
 	}
 	
 	static int calScore(int[][] target) {
@@ -173,32 +200,8 @@ public class Main {
 		public Matrix(int r, int c, int d) {
 			this.r = r;
 			this.c = c;
-			this.d = d;
-			ownMap = new int[MAP_SIZE][MAP_SIZE];
-			
-			for(int i=0; i<MAP_SIZE; i++) {
-				System.arraycopy(map[i], 0, ownMap[i], 0, MAP_SIZE);
-			}
-			
-			if(d == 1) {
-				for(int i=0; i<3; i++) {
-					for(int j=0; j<3; j++) {
-						ownMap[r-1+i][c-1+j] = map[r+1-j][c-1+i];
-					}
-				}
-			} else if(d == -1) {
-				for(int i=0; i<3; i++) {
-					for(int j=0; j<3; j++) {
-						ownMap[r-1+i][c-1+j] = map[r-1+j][c+1-i];
-					}
-				}
-			} else if(d == 2) {
-				for(int i=0; i<3; i++) {
-					for(int j=0; j<3; j++) {
-						ownMap[r-1+i][c-1+j] = map[r+1-i][c+1-j];
-					}
-				}
-			}
+			this.d = Math.abs(d);
+			ownMap = getNewMap(r, c, d);
 			
 			this.score = calScore(ownMap);
 		}
@@ -206,7 +209,7 @@ public class Main {
 		@Override
 		public int compareTo(Matrix matrix) {
 			if(this.score != matrix.score) return matrix.score - this.score;		// 1. 가치가 가장 높은것
-			if(Math.abs(this.d) != Math.abs(matrix.d)) return this.d - matrix.d;	// 2. 회전각도가 작은 방법
+			if(this.d != matrix.d) return this.d - matrix.d;						// 2. 회전각도가 작은 방법
 			if(this.c != matrix.c) return this.c - matrix.c;						// 3. 열이 가장 작은 경우
 			return this.r - matrix.r;												// 4. 행이 가장 작은 경우
 		}
